@@ -53,6 +53,12 @@ ifeq ($(TARGET),JACDAC)
 	ARCH				= STM32F1
 	DEFS				+= -DHAVE_LED=1 -DLED_GPIO_PORT=GPIOB -DLED_GPIO_PIN=GPIO13 -DLED_OPEN_DRAIN=0
 endif
+ifeq ($(TARGET),PRIME_PLUS)
+	TARGET_COMMON_DIR	:= ./stm32f103
+	TARGET_SPEC_DIR		:= ./stm32f103/prime_plus
+	LDSCRIPT			:= ./stm32f103/stm32f103x8.ld
+	ARCH				= STM32F1
+endif
 
 ifndef ARCH
 $(error Unknown target $(TARGET))

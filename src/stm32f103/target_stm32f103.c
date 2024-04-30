@@ -25,6 +25,7 @@
 #include <libopencm3/stm32/desig.h>
 #include <libopencm3/cm3/scb.h>
 
+#include "libopencm3/stm32/f1/gpio.h"
 #include "target.h"
 #include "config.h"
 #include "backup.h"
@@ -63,8 +64,10 @@ void target_clock_setup(void) {
     rcc_clock_setup_in_hsi_out_48mhz();
 #else
     /* Set system clock to 72 MHz from an external crystal */
-    #ifdef CRYSTAL_16MHZ
+    #if defined(CRYSTAL_16MHZ)
     rcc_clock_setup_in_hse_16mhz_out_72mhz();
+    #elif defined(CRYSTAL_12MHZ)
+    rcc_clock_setup_in_hse_12mhz_out_72mhz();
     #else
     rcc_clock_setup_in_hse_8mhz_out_72mhz();
     #endif
@@ -94,6 +97,9 @@ void target_gpio_setup(void) {
     rcc_periph_clock_enable(RCC_GPIOA);
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_GPIOC);
+
+    rcc_periph_clock_enable(RCC_AFIO);
+    gpio_primary_remap(AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_ON, AFIO_MAPR_I2C1_REMAP);
 
     /* Setup LEDs */
 #if HAVE_LED
@@ -192,7 +198,7 @@ void target_manifest_app(void) {
 bool target_get_force_app(void) {
     if (backup_read(BKP0) == CMD_APP) {
         backup_write(BKP0, 0);
-        return true;        
+        return true;
     }
     return false;
 }
@@ -211,7 +217,7 @@ bool target_get_force_bootloader(void) {
         backup_write(BKP0, 0);
         return true;
     }
-    if (cmd == CMD_APP) {        
+    if (cmd == CMD_APP) {
         // we were told to reset into app
         backup_write(BKP0, 0);
         return false;
